@@ -1,13 +1,10 @@
-const forms = () => {
-  const allForms = document.querySelectorAll('form'),
-        inputs = document.querySelectorAll('input'),
-        phoneInputs = document.querySelectorAll('input[name="user_phone"]');
+import checkNumInputs from './checkNumInputs';
 
-  phoneInputs.forEach(item => {
-    item.addEventListener('input', () => {
-      item.value = item.value.replace(/\D/, '');
-    });
-  });
+const forms = (state) => {
+  const allForms = document.querySelectorAll('form'),
+    inputs = document.querySelectorAll('input');
+
+  checkNumInputs('input[name="user_phone"]');
 
   const message = {
     loading: 'Loading...',
@@ -20,7 +17,7 @@ const forms = () => {
 
     let res = await fetch(url, {
       method: 'POST',
-      body: data
+      body: new URLSearchParams(data)
     });
 
     return await res.json();
@@ -41,11 +38,19 @@ const forms = () => {
       item.appendChild(statusMessage);
 
       const formData = new FormData(item);
-      console.log('user_name:', formData.get('user_name'));
-      console.log('user_phone:', formData.get('user_phone'));
-      const data = new URLSearchParams(formData);
+      if (item.getAttribute('data-calc') === 'end') {
+        for (let key in state) {
+          formData.append(key, state[key]);
+        }
+      };
 
-      postData('http://localhost:4001/clients', data)
+      // output the received data to the console when the server is down
+      const formDataObj = {};
+      formData.forEach((value, key) => (formDataObj[key] = value));
+      console.log(formDataObj);
+      // ---
+
+      postData('http://localhost:4001/clients', formData)
         .then(res => {
           console.log(res);
           statusMessage.textContent = message.success;
